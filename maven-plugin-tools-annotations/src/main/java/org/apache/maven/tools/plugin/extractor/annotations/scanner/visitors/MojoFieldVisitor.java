@@ -19,47 +19,60 @@ package org.apache.maven.tools.plugin.extractor.annotations.scanner.visitors;
  * under the License.
  */
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.maven.tools.plugin.extractor.annotations.scanner.MojoAnnotationsScanner;
-import org.codehaus.plexus.logging.Logger;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 /**
+ * Visitors for fields.
+ *
  * @author Olivier Lamy
  * @since 3.0
  */
 public class MojoFieldVisitor
-    extends FieldVisitor
+    extends FieldVisitor implements MojoParameterVisitor
 {
-    private Logger logger;
-
     private String fieldName;
 
-    private MojoAnnotationVisitor mojoAnnotationVisitor;
+    private Map<String, MojoAnnotationVisitor> annotationVisitorMap = new HashMap<>();
 
     private String className;
 
-    MojoFieldVisitor( Logger logger, String fieldName, String className )
+    private final List<String> typeParameters;
+
+    MojoFieldVisitor( String fieldName, String className, List<String> typeParameters )
     {
-        super( Opcodes.ASM7 );
-        this.logger = logger;
+        super( Opcodes.ASM9 );
         this.fieldName = fieldName;
         this.className = className;
+        this.typeParameters = typeParameters;
     }
 
-    public MojoAnnotationVisitor getMojoAnnotationVisitor()
+    @Override
+    public Map<String, MojoAnnotationVisitor> getAnnotationVisitorMap()
     {
-        return mojoAnnotationVisitor;
+        return annotationVisitorMap;
     }
 
+    @Override
     public String getFieldName()
     {
         return fieldName;
     }
 
+    @Override
+    public List<String> getTypeParameters()
+    {
+        return typeParameters;
+    }
+
+    @Override
     public AnnotationVisitor visitAnnotation( String desc, boolean visible )
     {
         String annotationClassName = Type.getType( desc ).getClassName();
@@ -67,27 +80,20 @@ public class MojoFieldVisitor
         {
             return null;
         }
-        mojoAnnotationVisitor = new MojoAnnotationVisitor( logger, annotationClassName );
+        MojoAnnotationVisitor mojoAnnotationVisitor = new MojoAnnotationVisitor( annotationClassName );
+        annotationVisitorMap.put( annotationClassName, mojoAnnotationVisitor );
         return mojoAnnotationVisitor;
     }
 
-    public void visitAttribute( Attribute attribute )
-    {
-        // no op
-    }
-
-    public void visitEnd()
-    {
-        // no op
-    }
-
+    @Override
     public String getClassName()
     {
         return className;
     }
 
-    public void setClassName( String className )
+    @Override
+    public boolean isAnnotationOnMethod()
     {
-        this.className = className;
+        return false;
     }
 }

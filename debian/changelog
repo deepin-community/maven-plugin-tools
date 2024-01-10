@@ -1,3 +1,36 @@
+maven-plugin-tools (3.7.1-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 31 Jan 2023 13:22:41 +0100
+
+maven-plugin-tools (3.7.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release
+    - Refreshed the patch
+    - New dependency on libplexus-testing-java
+    - Ignore the new maven-plugin-report-plugin module
+  * Depend on libmaven-parent-java
+  * Standards-Version updated to 4.6.2
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Tue, 10 Jan 2023 01:28:33 +0100
+
+maven-plugin-tools (3.6.4-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release
+    - Depend on junit4 instead of junit
+    - No longer depend on libeasymock-java
+    - Updated the Maven rules
+    - Fixed the compatibility with the version of plexus-utils in Debian
+  * Removed the unused dependency on ant and ant-optional
+  * Standards-Version updated to 4.6.1
+  * Switch to debhelper level 13
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Fri, 06 Jan 2023 14:09:17 +0100
+
 maven-plugin-tools (3.6.0-1) unstable; urgency=medium
 
   * Team upload.

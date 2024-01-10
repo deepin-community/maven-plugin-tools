@@ -6,16 +6,15 @@ Uploaders:
  Torsten Werner <twerner@debian.org>,
  Ludovic Claude <ludovic.claude@laposte.net>
 Build-Depends:
- ant,
- ant-optional,
- debhelper (>= 11),
+ debhelper-compat (= 13),
  default-jdk,
- junit,
+ junit4,
  libasm-java (>= 7.0),
  libbsh-java,
  libdoxia-sitetools-java,
- libeasymock-java,
+ libeclipse-sisu-maven-plugin-java,
  libjtidy-java,
+ libmaven-parent-java,
  libmaven-reporting-api-java,
  libmaven-reporting-impl-java,
  libmaven3-core-java,
@@ -25,11 +24,12 @@ Build-Depends:
  libplexus-bsh-factory-java,
  libplexus-component-annotations-java,
  libplexus-component-metadata-java (>= 1.6),
+ libplexus-testing-java,
  libplexus-velocity-java,
  libqdox2-java,
  maven-debian-helper (>= 2.0.3),
  velocity
-Standards-Version: 4.2.1
+Standards-Version: 4.6.2
 Vcs-Git: https://salsa.debian.org/java-team/maven-plugin-tools.git
 Vcs-Browser: https://salsa.debian.org/java-team/maven-plugin-tools
 Homepage: http://maven.apache.org/plugin-tools/

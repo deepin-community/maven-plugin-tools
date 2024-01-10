@@ -23,9 +23,11 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.util.ReaderFactory;
 import org.codehaus.plexus.util.StringUtils;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,6 +60,14 @@ public class DefaultPluginToolsRequest
 
     private ArtifactRepository local;
 
+    private URI internalJavadocBaseUrl;
+    
+    private String internalJavadocVersion;
+    
+    private List<URI> externalJavadocBaseUrls;
+
+    private Settings settings;
+
     public DefaultPluginToolsRequest( MavenProject project, PluginDescriptor pluginDescriptor )
     {
         this.project = project;
@@ -67,6 +77,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public PluginDescriptor getPluginDescriptor()
     {
         return pluginDescriptor;
@@ -75,6 +86,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public PluginToolsRequest setPluginDescriptor( PluginDescriptor pluginDescriptor )
     {
         this.pluginDescriptor = pluginDescriptor;
@@ -84,6 +96,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public MavenProject getProject()
     {
         return project;
@@ -92,6 +105,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public PluginToolsRequest setProject( MavenProject project )
     {
         this.project = project;
@@ -101,6 +115,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getEncoding()
     {
         return this.encoding;
@@ -109,6 +124,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public PluginToolsRequest setEncoding( String encoding )
     {
         if ( StringUtils.isNotEmpty( encoding ) )
@@ -126,6 +142,7 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isSkipErrorNoDescriptorsFound()
     {
         return skipErrorNoDescriptorsFound;
@@ -134,12 +151,14 @@ public class DefaultPluginToolsRequest
     /**
      * {@inheritDoc}
      */
+    @Override
     public PluginToolsRequest setSkipErrorNoDescriptorsFound( boolean skipErrorNoDescriptorsFound )
     {
         this.skipErrorNoDescriptorsFound = skipErrorNoDescriptorsFound;
         return this;
     }
 
+    @Override
     public Set<Artifact> getDependencies()
     {
         if ( this.dependencies == null )
@@ -149,31 +168,88 @@ public class DefaultPluginToolsRequest
         return dependencies;
     }
 
+    @Override
     public PluginToolsRequest setDependencies( Set<Artifact> dependencies )
     {
         this.dependencies = dependencies;
         return this;
     }
 
+    @Override
     public List<ArtifactRepository> getRemoteRepos()
     {
         return remoteRepos;
     }
 
+    @Override
     public PluginToolsRequest setRemoteRepos( List<ArtifactRepository> remoteRepos )
     {
         this.remoteRepos = remoteRepos;
         return this;
     }
 
+    @Override
     public ArtifactRepository getLocal()
     {
         return local;
     }
 
+    @Override
     public PluginToolsRequest setLocal( ArtifactRepository local )
     {
         this.local = local;
         return this;
+    }
+
+    @Override
+    public PluginToolsRequest setInternalJavadocBaseUrl( URI baseUrl )
+    {
+        internalJavadocBaseUrl = baseUrl;
+        return this;
+    }
+
+    @Override
+    public URI getInternalJavadocBaseUrl()
+    {
+        return internalJavadocBaseUrl;
+    }
+
+    @Override
+    public PluginToolsRequest setInternalJavadocVersion( String javadocVersion )
+    {
+        this.internalJavadocVersion = javadocVersion;
+        return this;
+    }
+
+    @Override
+    public String getInternalJavadocVersion()
+    {
+        return internalJavadocVersion;
+    }
+
+    @Override
+    public PluginToolsRequest setExternalJavadocBaseUrls( List<URI> javadocLinks )
+    {
+        this.externalJavadocBaseUrls = javadocLinks;
+        return this;
+    }
+
+    @Override
+    public List<URI> getExternalJavadocBaseUrls()
+    {
+        return externalJavadocBaseUrls;
+    }
+
+    @Override
+    public PluginToolsRequest setSettings( Settings settings )
+    {
+        this.settings = settings;
+        return this;
+    }
+
+    @Override
+    public Settings getSettings()
+    {
+        return settings;
     }
 }

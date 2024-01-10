@@ -23,7 +23,7 @@ under the License.
   <parent>
     <groupId>org.apache.maven.plugin-tools</groupId>
     <artifactId>maven-script</artifactId>
-    <version>3.6.0</version>
+    <version>3.7.1</version>
   </parent>
 
   <artifactId>maven-script-ant</artifactId>
@@ -36,11 +36,23 @@ under the License.
       <groupId>org.apache.ant</groupId>
       <artifactId>ant</artifactId>
       <version>${antVersion}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.ant</groupId>
       <artifactId>ant-launcher</artifactId>
       <version>${antVersion}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -50,6 +62,12 @@ under the License.
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-ant-factory</artifactId>
       <version>1.0-alpha-2.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-container-default</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.codehaus.plexus</groupId>
@@ -60,8 +78,18 @@ under the License.
       <artifactId>maven-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

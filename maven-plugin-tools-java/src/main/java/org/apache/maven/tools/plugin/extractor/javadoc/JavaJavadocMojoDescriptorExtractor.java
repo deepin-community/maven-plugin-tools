@@ -19,6 +19,9 @@ package org.apache.maven.tools.plugin.extractor.javadoc;
  * under the License.
  */
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,9 +42,9 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.tools.plugin.ExtendedMojoDescriptor;
 import org.apache.maven.tools.plugin.PluginToolsRequest;
 import org.apache.maven.tools.plugin.extractor.ExtractionException;
+import org.apache.maven.tools.plugin.extractor.GroupKey;
 import org.apache.maven.tools.plugin.extractor.MojoDescriptorExtractor;
 import org.apache.maven.tools.plugin.util.PluginUtils;
-import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.logging.AbstractLogEnabled;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -54,19 +57,44 @@ import com.thoughtworks.qdox.model.JavaType;
 
 /**
  * <p>
- * Extracts Mojo descriptors from <a href="http://java.sun.com/">Java</a> sources.
+ * Extracts Mojo descriptors from <a href="https://www.oracle.com/java/technologies//">Java</a> source
+ * javadoc comments only. New mojos should rather rely on annotations and comments which are evaluated
+ * by extractor named {@code java}.
  * </p>
  * For more information about the usage tag, have a look to:
- * <a href="http://maven.apache.org/developers/mojo-api-specification.html">
- * http://maven.apache.org/developers/mojo-api-specification.html</a>
+ * <a href="https://maven.apache.org/developers/mojo-api-specification.html">
+ * https://maven.apache.org/developers/mojo-api-specification.html</a>
  *
  * @see org.apache.maven.plugin.descriptor.MojoDescriptor
  */
-@Component( role = MojoDescriptorExtractor.class, hint = "java-javadoc" )
+@Named( JavaJavadocMojoDescriptorExtractor.NAME )
+@Singleton
 public class JavaJavadocMojoDescriptorExtractor
     extends AbstractLogEnabled
     implements MojoDescriptorExtractor, JavadocMojoAnnotation
 {
+    public static final String NAME = "java-javadoc";
+
+    private static final GroupKey GROUP_KEY = new GroupKey( GroupKey.JAVA_GROUP, 200 );
+
+    @Override
+    public String getName()
+    {
+        return NAME;
+    }
+
+    @Override
+    public boolean isDeprecated()
+    {
+        return true; // one should use Java5 annotations instead
+    }
+
+    @Override
+    public GroupKey getGroupKey()
+    {
+        return GROUP_KEY;
+    }
+
     /**
      * @param parameter not null
      * @param i positive number
@@ -566,7 +594,8 @@ public class JavaJavadocMojoDescriptorExtractor
         return rawParams;
     }
 
-    /** {@inheritDoc} */
+
+    @Override
     public List<MojoDescriptor> execute( PluginToolsRequest request )
         throws ExtractionException, InvalidPluginDescriptorException
     {
@@ -597,7 +626,6 @@ public class JavaJavadocMojoDescriptorExtractor
      * @param request The plugin request.
      * @return an array of java class
      */
-    @SuppressWarnings( "unchecked" )
     protected Collection<JavaClass> discoverClasses( final PluginToolsRequest request )
     {
         JavaProjectBuilder builder = new JavaProjectBuilder( new SortedClassLibraryBuilder() );
@@ -620,7 +648,7 @@ public class JavaJavadocMojoDescriptorExtractor
         
         MavenProject project = request.getProject();
 
-        for ( String source : (List<String>) project.getCompileSourceRoots() )
+        for ( String source : project.getCompileSourceRoots() )
         {
             builder.addSourceTree( new File( source ) );
         }
@@ -642,7 +670,6 @@ public class JavaJavadocMojoDescriptorExtractor
     protected void validate( MojoDescriptor mojoDescriptor )
         throws InvalidParameterException
     {
-        @SuppressWarnings( "unchecked" )
         List<Parameter> parameters = mojoDescriptor.getParameters();
 
         if ( parameters != null )

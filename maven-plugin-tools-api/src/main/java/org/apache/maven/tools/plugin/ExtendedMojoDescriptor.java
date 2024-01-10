@@ -20,6 +20,7 @@ package org.apache.maven.tools.plugin;
  */
 
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
+import org.apache.maven.plugin.descriptor.Parameter;
 
 /**
  * Extensions to MojoDescriptor added to Maven 3, then are not available when run under Maven2.
@@ -28,27 +29,59 @@ import org.apache.maven.plugin.descriptor.MojoDescriptor;
 public class ExtendedMojoDescriptor
     extends MojoDescriptor
 {
+    private final boolean containsXhtmlTextValues;
+
     private boolean threadSafe = false;
 
     private String requiresDependencyCollection = null;
 
+    public ExtendedMojoDescriptor()
+    {
+        this( false );
+    }
+
+    /**
+     * @param containsXhtmlTextValues
+     * @since 3.7.0
+     */
+    public ExtendedMojoDescriptor( boolean containsXhtmlTextValues )
+    {
+        this.containsXhtmlTextValues = containsXhtmlTextValues;
+    }
+
+    @Override
     public boolean isThreadSafe()
     {
         return threadSafe;
     }
 
+    @Override
     public void setThreadSafe( boolean threadSafe )
     {
         this.threadSafe = threadSafe;
     }
 
+    @Override
     public String getDependencyCollectionRequired()
     {
         return requiresDependencyCollection;
     }
 
+    @Override
     public void setDependencyCollectionRequired( String requiresDependencyCollection )
     {
         this.requiresDependencyCollection = requiresDependencyCollection;
+    }
+    
+    /**
+     * Indicates if the methods {@link #getDescription()}, {@link #getDeprecated()}, {@link Parameter#getDescription()}
+     * and {@link Parameter#getDeprecated()} return XHTML values.
+     * @return {@code true} if aforementioned methods return XHTML values, if {@code false} those values contain
+     * javadoc (HTML + custom javadoc tags) (for legacy extractors)
+     * @since 3.7.0
+     */
+    public boolean containsXhtmlTextValues()
+    {
+        return containsXhtmlTextValues;
     }
 }

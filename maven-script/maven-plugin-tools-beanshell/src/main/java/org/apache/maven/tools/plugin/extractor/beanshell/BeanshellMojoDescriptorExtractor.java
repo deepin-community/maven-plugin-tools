@@ -19,6 +19,11 @@ package org.apache.maven.tools.plugin.extractor.beanshell;
  * under the License.
  */
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import bsh.EvalError;
 import bsh.Interpreter;
 import org.apache.maven.plugin.descriptor.InvalidPluginDescriptorException;
@@ -26,12 +31,10 @@ import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.tools.plugin.PluginToolsRequest;
 import org.apache.maven.tools.plugin.extractor.AbstractScriptedMojoDescriptorExtractor;
 import org.apache.maven.tools.plugin.extractor.ExtractionException;
-import org.apache.maven.tools.plugin.extractor.MojoDescriptorExtractor;
-import org.codehaus.plexus.component.annotations.Component;
+import org.apache.maven.tools.plugin.extractor.GroupKey;
 
 import java.io.File;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,15 +43,34 @@ import java.util.Set;
 /**
  * Extracts Mojo descriptors from <a href="http://www.beanshell.org/">BeanShell</a> sources.
  *
+ * @deprecated Scripting support for mojos is deprecated and is planned tp be removed in maven 4.0
  */
-@Component( role = MojoDescriptorExtractor.class, hint = "bsh" )
+@Deprecated
+@Named( BeanshellMojoDescriptorExtractor.NAME )
+@Singleton
 public class BeanshellMojoDescriptorExtractor
     extends AbstractScriptedMojoDescriptorExtractor
-    implements MojoDescriptorExtractor
 {
+    public static final String NAME = "bsh";
+
+    private static final GroupKey GROUP_KEY = new GroupKey( "bsh", 100 );
+
+    @Override
+    public String getName()
+    {
+        return NAME;
+    }
+
+    @Override
+    public GroupKey getGroupKey()
+    {
+        return GROUP_KEY;
+    }
+
     /**
      * {@inheritDoc}
      */
+    @Override
     protected String getScriptFileExtension( PluginToolsRequest request )
     {
         return ".bsh";
@@ -57,6 +79,7 @@ public class BeanshellMojoDescriptorExtractor
     /**
      * {@inheritDoc}
      */
+    @Override
     protected List<MojoDescriptor> extractMojoDescriptors( Map<String, Set<File>> scriptFilesKeyedByBasedir,
                                                            PluginToolsRequest request )
         throws ExtractionException, InvalidPluginDescriptorException
@@ -118,18 +141,14 @@ public class BeanshellMojoDescriptorExtractor
 
             interpreter.set( "encoding", "UTF-8" );
 
-            interpreter.eval( new InputStreamReader( getClass().getResourceAsStream( "/extractor.bsh" ), "UTF-8" ) );
+            interpreter.eval( new InputStreamReader( getClass().getResourceAsStream( "/extractor.bsh" ), UTF_8 ) );
         }
         catch ( EvalError evalError )
         {
             throw new InvalidPluginDescriptorException( "Error scanning beanshell script", evalError );
         }
-        catch ( UnsupportedEncodingException uee )
-        {
-            // should not occur...
-            throw new InvalidPluginDescriptorException( "Unsupported encoding while reading beanshell script", uee );
-        }
 
+        // FIXME: convert javadocs
         return mojoDescriptor;
     }
 }

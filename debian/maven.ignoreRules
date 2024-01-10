@@ -10,3 +10,5 @@ org.apache.maven.plugin-testing maven-plugin-testing-harness * * * *
 org.apache.rat apache-rat-plugin * * * *
 org.apache.maven maven-project * * * *
 org.apache.maven maven-plugin-registry * * * *
+org.assertj assertj-core * * * *
+org.mockito mockito-core * * * *

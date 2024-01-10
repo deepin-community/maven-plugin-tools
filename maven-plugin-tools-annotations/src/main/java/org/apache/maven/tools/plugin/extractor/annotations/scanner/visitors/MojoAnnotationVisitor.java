@@ -22,27 +22,25 @@ package org.apache.maven.tools.plugin.extractor.annotations.scanner.visitors;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.plexus.logging.Logger;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
+ * Visitor for annotations.
+ *
  * @author Olivier Lamy
  * @since 3.0
  */
 public class MojoAnnotationVisitor
     extends AnnotationVisitor
 {
-    private Logger logger;
-
     private String annotationClassName;
 
     private Map<String, Object> annotationValues = new HashMap<>();
 
-    MojoAnnotationVisitor( Logger logger, String annotationClassName )
+    MojoAnnotationVisitor( String annotationClassName )
     {
-        super( Opcodes.ASM7 );
-        this.logger = logger;
+        super( Opcodes.ASM9 );
         this.annotationClassName = annotationClassName;
     }
 
@@ -51,33 +49,27 @@ public class MojoAnnotationVisitor
         return annotationValues;
     }
 
+    @Override
     public void visit( String name, Object value )
     {
         annotationValues.put( name, value );
     }
 
+    @Override
     public void visitEnum( String name, String desc, String value )
     {
         annotationValues.put( name, value );
     }
 
+    @Override
     public AnnotationVisitor visitAnnotation( String name, String desc )
     {
-        return new MojoAnnotationVisitor( logger, this.annotationClassName );
+        return new MojoAnnotationVisitor( this.annotationClassName );
     }
 
+    @Override
     public AnnotationVisitor visitArray( String s )
     {
-        return new MojoAnnotationVisitor( logger, this.annotationClassName );
-    }
-
-    public void visitEnd()
-    {
-        // no op
-    }
-
-    public String getAnnotationClassName()
-    {
-        return annotationClassName;
+        return new MojoAnnotationVisitor( this.annotationClassName );
     }
 }

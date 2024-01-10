@@ -25,9 +25,10 @@
 #   --site-xml=<location>: Optional, the location for site.xml if it needs to be installed.
 #     Empty by default. [mh_install]
 #
-pom.xml --no-parent --has-package-version
+pom.xml --has-package-version
 maven-plugin-annotations/pom.xml --has-package-version
 maven-plugin-plugin/pom.xml --has-package-version --relocate=org.apache.maven.plugins:maven-plugin-plugin:3.2
+maven-plugin-report-plugin/pom.xml --ignore
 maven-plugin-tools-annotations/pom.xml --has-package-version
 maven-plugin-tools-api/pom.xml --has-package-version
 maven-plugin-tools-generators/pom.xml --has-package-version

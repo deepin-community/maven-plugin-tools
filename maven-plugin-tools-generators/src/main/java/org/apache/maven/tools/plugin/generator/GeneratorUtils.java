@@ -19,16 +19,22 @@ package org.apache.maven.tools.plugin.generator;
  * under the License.
  */
 
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.parser.ParserDelegator;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,13 +43,8 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.text.MutableAttributeSet;
-import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.parser.ParserDelegator;
-
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.project.MavenProject;
@@ -73,7 +74,6 @@ public final class GeneratorUtils
     {
         w.startElement( "dependencies" );
 
-        @SuppressWarnings( "unchecked" )
         List<ComponentDependency> deps = pluginDescriptor.getDependencies();
         for ( ComponentDependency dep : deps )
         {
@@ -112,27 +112,27 @@ public final class GeneratorUtils
         w.endElement();
     }
 
-    public static void element( XMLWriter w, String name, String value, boolean asText )
-    {
-        element( w, name, asText ? GeneratorUtils.toText( value ) : value );
-    }
-    
     /**
-     * @param dependencies not null list of <code>Dependency</code>
-     * @return list of component dependencies
+     * @param artifacts not null collection of <code>Artifact</code>
+     * @return list of component dependencies, without in provided scope
      */
-    public static List<ComponentDependency> toComponentDependencies( List<Dependency> dependencies )
+    public static List<ComponentDependency> toComponentDependencies( Collection<Artifact> artifacts )
     {
         List<ComponentDependency> componentDeps = new LinkedList<>();
 
-        for ( Dependency dependency : dependencies )
+        for ( Artifact artifact : artifacts )
         {
+            if ( Artifact.SCOPE_PROVIDED.equals( artifact.getScope() ) )
+            {
+                continue;
+            }
+
             ComponentDependency cd = new ComponentDependency();
 
-            cd.setArtifactId( dependency.getArtifactId() );
-            cd.setGroupId( dependency.getGroupId() );
-            cd.setVersion( dependency.getVersion() );
-            cd.setType( dependency.getType() );
+            cd.setArtifactId( artifact.getArtifactId() );
+            cd.setGroupId( artifact.getGroupId() );
+            cd.setVersion( artifact.getVersion() );
+            cd.setType( artifact.getType() );
 
             componentDeps.add( cd );
         }
@@ -188,7 +188,9 @@ public final class GeneratorUtils
      *
      * @param description The javadoc description to decode, may be <code>null</code>.
      * @return The decoded description, never <code>null</code>.
+     * @deprecated Only used for non java extractor
      */
+    @Deprecated
     static String decodeJavadocTags( String description )
     {
         if ( StringUtils.isEmpty( description ) )
@@ -259,9 +261,12 @@ public final class GeneratorUtils
      *
      * @param description Javadoc description with HTML tags, may be <code>null</code>.
      * @return The description with valid XHTML tags, never <code>null</code>.
+     * @deprecated Redundant for java extractor
      */
+    @Deprecated
     public static String makeHtmlValid( String description )
     {
+        
         if ( StringUtils.isEmpty( description ) )
         {
             return "";
@@ -280,17 +285,11 @@ public final class GeneratorUtils
         tidy.setNumEntities( true );
         tidy.setQuoteNbsp( false );
         tidy.setQuiet( true );
-        tidy.setShowWarnings( false );
-        try
-        {
-            ByteArrayOutputStream out = new ByteArrayOutputStream( commentCleaned.length() + 256 );
-            tidy.parse( new ByteArrayInputStream( commentCleaned.getBytes( "UTF-8" ) ), out );
-            commentCleaned = out.toString( "UTF-8" );
-        }
-        catch ( UnsupportedEncodingException e )
-        {
-            // cannot happen as every JVM must support UTF-8, see also class javadoc for java.nio.charset.Charset
-        }
+        tidy.setShowWarnings( true );
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream( commentCleaned.length() + 256 );
+        tidy.parse( new ByteArrayInputStream( commentCleaned.getBytes( StandardCharsets.UTF_8 ) ), out );
+        commentCleaned = new String( out.toByteArray(), StandardCharsets.UTF_8 );
 
         if ( StringUtils.isEmpty( commentCleaned ) )
         {
@@ -322,7 +321,9 @@ public final class GeneratorUtils
      * @param html The HTML fragment to convert to plain text, may be <code>null</code>.
      * @return A string with HTML tags converted into pure text, never <code>null</code>.
      * @since 2.4.3
+     * @deprecated Replaced by {@link HtmlToPlainTextConverter}
      */
+    @Deprecated
     public static String toText( String html )
     {
         if ( StringUtils.isEmpty( html ) )
@@ -408,6 +409,7 @@ public final class GeneratorUtils
         }
 
         /** {@inheritDoc} */
+        @Override
         public void handleSimpleTag( HTML.Tag t, MutableAttributeSet a, int pos )
         {
             simpleTag = true;
@@ -418,6 +420,7 @@ public final class GeneratorUtils
         }
 
         /** {@inheritDoc} */
+        @Override
         public void handleStartTag( HTML.Tag t, MutableAttributeSet a, int pos )
         {
             simpleTag = false;
@@ -461,6 +464,7 @@ public final class GeneratorUtils
         }
 
         /** {@inheritDoc} */
+        @Override
         public void handleEndTag( HTML.Tag t, int pos )
         {
             if ( HTML.Tag.OL.equals( t ) || HTML.Tag.UL.equals( t ) )
@@ -496,6 +500,7 @@ public final class GeneratorUtils
         }
 
         /** {@inheritDoc} */
+        @Override
         public void handleText( char[] data, int pos )
         {
             /*
@@ -519,6 +524,7 @@ public final class GeneratorUtils
         }
 
         /** {@inheritDoc} */
+        @Override
         public void flush()
         {
             flushPendingNewline();

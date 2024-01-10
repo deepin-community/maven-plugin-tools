@@ -28,13 +28,12 @@ import org.apache.maven.reporting.MavenReportException;
 
 /**
  * Dummy report.
- *
- * @goal dummyReport
  */
 public class MavenReportStub
     extends AbstractMavenReport
 {
     /** {@inheritDoc} */
+    @Override
     protected void executeReport( Locale locale )
         throws MavenReportException
     {
@@ -42,36 +41,42 @@ public class MavenReportStub
     }
 
     /** {@inheritDoc} */
+    @Override
     protected String getOutputDirectory()
     {
         return null;
     }
 
     /** {@inheritDoc} */
+    @Override
     protected MavenProject getProject()
     {
         return null;
     }
 
     /** {@inheritDoc} */
+    @Override
     protected Renderer getSiteRenderer()
     {
         return null;
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getDescription( Locale locale )
     {
         return null;
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getName( Locale locale )
     {
         return null;
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getOutputName()
     {
         return null;

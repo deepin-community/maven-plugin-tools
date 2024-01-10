@@ -34,7 +34,6 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.PropertyHelper;
 import org.apache.tools.ant.types.Path;
 import org.codehaus.plexus.archiver.ArchiverException;
-import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.component.MapOrientedComponent;
 import org.codehaus.plexus.component.configurator.ComponentConfigurationException;
@@ -54,8 +53,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 
+ *
+ * @deprecated Scripting support for mojos is deprecated and is planned tp be removed in maven 4.0
  */
+@Deprecated
 public class AntMojoWrapper
     extends AbstractMojo
     implements ContextEnabled, MapOrientedComponent, LogEnabled
@@ -125,7 +126,7 @@ public class AntMojoWrapper
         
         if ( logger.isDebugEnabled() && !unconstructedParts.isEmpty() )
         {
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             
             buffer.append( "The following standard Maven Ant-mojo support objects could not be created:\n\n" );
             
@@ -204,7 +205,7 @@ public class AntMojoWrapper
 
         try
         {
-            UnArchiver ua = new ZipUnArchiver( pluginJar );
+            ZipUnArchiver ua = new ZipUnArchiver( pluginJar );
 
             ua.extract( resourcesPath, outputDirectory );
         }

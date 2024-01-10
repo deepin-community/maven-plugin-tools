@@ -23,7 +23,7 @@ under the License.
   <parent>
     <groupId>org.apache.maven.plugin-tools</groupId>
     <artifactId>maven-script</artifactId>
-    <version>3.6.0</version>
+    <version>3.7.1</version>
   </parent>
 
   <artifactId>maven-script-beanshell</artifactId>
@@ -40,6 +40,17 @@ under the License.
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-bsh-factory</artifactId>
       <version>1.0-alpha-7</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-container-default</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache-extras.beanshell</groupId>
+      <artifactId>bsh</artifactId>
+      <version>2.0b6</version>
     </dependency>
   </dependencies>
 </project>

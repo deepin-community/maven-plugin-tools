@@ -40,7 +40,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention( RetentionPolicy.CLASS )
-@Target( { ElementType.FIELD } )
+@Target( { ElementType.FIELD, ElementType.METHOD } )
 @Inherited
 public @interface Parameter
 {
@@ -64,7 +64,7 @@ public @interface Parameter
     String property() default "";
 
     /**
-     * parameter default value, eventually containing <code>${...}</code> expressions which will be interpreted at
+     * parameter default value, may contain <code>${...}</code> expressions which will be interpreted at
      * inject time: see
      * <a href="/ref/current/maven-core/apidocs/org/apache/maven/plugin/PluginParameterExpressionEvaluator.html">
      * PluginParameterExpressionEvaluator</a>. 

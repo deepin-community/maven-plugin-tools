@@ -1,0 +1,14 @@
+Description: Fixes the compatibility with the version of plexus-utils in Debian
+Author: Emmanuel Bourg <ebourg@apache.org>
+Forwarded: not-needed
+--- a/maven-plugin-tools-generators/src/main/java/org/apache/maven/tools/plugin/generator/PluginHelpGenerator.java
++++ b/maven-plugin-tools-generators/src/main/java/org/apache/maven/tools/plugin/generator/PluginHelpGenerator.java
+@@ -91,7 +91,7 @@
+                 w.write( helpClassSources );
+             }
+         }
+-        catch ( IOException e )
++        catch ( Exception e )
+         {
+             throw new GeneratorException( e.getMessage(), e );
+         }
