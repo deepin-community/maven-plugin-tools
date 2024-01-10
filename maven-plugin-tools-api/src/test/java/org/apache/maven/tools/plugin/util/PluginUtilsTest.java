@@ -20,15 +20,17 @@ package org.apache.maven.tools.plugin.util;
  */
 
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
-import org.apache.maven.plugin.testing.AbstractMojoTestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author jdcasey
  */
-public class PluginUtilsTest
-    extends AbstractMojoTestCase
+class PluginUtilsTest
 {
-    public void testShouldTrimArtifactIdToFindPluginId()
+    @Test
+    void testShouldTrimArtifactIdToFindPluginId()
     {
         assertEquals( "artifactId", PluginDescriptor.getGoalPrefixFromArtifactId( "maven-artifactId-plugin" ) );
         assertEquals( "artifactId", PluginDescriptor.getGoalPrefixFromArtifactId( "maven-plugin-artifactId" ) );
@@ -38,7 +40,8 @@ public class PluginUtilsTest
         assertEquals( "plugin", PluginDescriptor.getGoalPrefixFromArtifactId( "maven-plugin-plugin" ) );
     }
 
-    public void testShouldFindTwoScriptsWhenNoExcludesAreGiven()
+    @Test
+    void testShouldFindTwoScriptsWhenNoExcludesAreGiven()
     {
         String testScript = "test.txt";
 
@@ -50,7 +53,8 @@ public class PluginUtilsTest
         assertEquals( 2, files.length );
     }
 
-    public void testShouldFindOneScriptsWhenAnExcludeIsGiven()
+    @Test
+    void testShouldFindOneScriptsWhenAnExcludeIsGiven()
     {
         String testScript = "test.txt";
 

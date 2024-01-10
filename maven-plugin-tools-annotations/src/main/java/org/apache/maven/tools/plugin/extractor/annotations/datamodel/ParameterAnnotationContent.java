@@ -22,6 +22,8 @@ package org.apache.maven.tools.plugin.extractor.annotations.datamodel;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Olivier Lamy
@@ -46,16 +48,24 @@ public class ParameterAnnotationContent
 
     private String className;
 
-    public ParameterAnnotationContent( String fieldName, String className )
+    private boolean annotationOnMethod;
+
+    private final List<String> typeParameters;
+
+    public ParameterAnnotationContent( String fieldName, String className, List<String> typeParameters,
+                                       boolean annotationOnMethod )
     {
         super( fieldName );
         this.className = className;
+        this.typeParameters = typeParameters;
+        this.annotationOnMethod = annotationOnMethod;
     }
 
     public ParameterAnnotationContent( String fieldName, String alias, String property, String defaultValue,
-                                       boolean required, boolean readonly, String className )
+                                       boolean required, boolean readonly, String className,
+                                       List<String> typeParameters, boolean annotationOnMethod )
     {
-        this( fieldName, className );
+        this( fieldName, className, typeParameters, annotationOnMethod );
         this.alias = alias;
         this.property = property;
         this.defaultValue = defaultValue;
@@ -63,6 +73,7 @@ public class ParameterAnnotationContent
         this.readonly = readonly;
     }
 
+    @Override
     public String name()
     {
         return name;
@@ -73,6 +84,7 @@ public class ParameterAnnotationContent
         this.name = name;
     }
 
+    @Override
     public String alias()
     {
         return alias;
@@ -83,6 +95,7 @@ public class ParameterAnnotationContent
         this.alias = alias;
     }
 
+    @Override
     public String property()
     {
         return property;
@@ -93,6 +106,7 @@ public class ParameterAnnotationContent
         this.property = property;
     }
 
+    @Override
     public String defaultValue()
     {
         return defaultValue;
@@ -103,6 +117,7 @@ public class ParameterAnnotationContent
         this.defaultValue = defaultValue;
     }
 
+    @Override
     public boolean required()
     {
         return required;
@@ -113,6 +128,7 @@ public class ParameterAnnotationContent
         this.required = required;
     }
 
+    @Override
     public boolean readonly()
     {
         return readonly;
@@ -123,6 +139,7 @@ public class ParameterAnnotationContent
         this.readonly = readonly;
     }
 
+    @Override
     public Class<? extends Annotation> annotationType()
     {
         return null;
@@ -138,18 +155,33 @@ public class ParameterAnnotationContent
         this.className = className;
     }
 
+    public List<String> getTypeParameters()
+    {
+        return typeParameters;
+    }
+
+    public boolean isAnnotationOnMethod()
+    {
+        return annotationOnMethod;
+    }
+
     @Override
     public String toString()
     {
         final StringBuilder sb = new StringBuilder();
         sb.append( super.toString() );
         sb.append( "ParameterAnnotationContent" );
-        sb.append( "{name='" ).append( name ).append( '\'' );
+        sb.append( "{fieldName='" ).append( getFieldName() ).append( '\'' );
+        sb.append( ", className='" ).append( getClassName() ).append( '\'' );
+        sb.append( ", typeParameters='" ).append( getTypeParameters() ).append( '\'' );
+        sb.append( ", name='" ).append( name ).append( '\'' );
+        sb.append( ", alias='" ).append( alias ).append( '\'' );
         sb.append( ", alias='" ).append( alias ).append( '\'' );
         sb.append( ", property='" ).append( property ).append( '\'' );
         sb.append( ", defaultValue='" ).append( defaultValue ).append( '\'' );
         sb.append( ", required=" ).append( required );
         sb.append( ", readonly=" ).append( readonly );
+        sb.append( ", methodSource=" ).append( annotationOnMethod );
         sb.append( '}' );
         return sb.toString();
     }
@@ -177,20 +209,34 @@ public class ParameterAnnotationContent
             return false;
         }
 
+        if ( annotationOnMethod != that.annotationOnMethod )
+        {
+            return false;
+        }
+
         if ( getFieldName() != null ? !getFieldName().equals( that.getFieldName() ) : that.getFieldName() != null )
         {
             return false;
         }
 
-        if ( alias != null ? !alias.equals( that.alias ) : that.alias != null )
+        if ( getClassName() != null ? !getClassName().equals( that.getClassName() ) : that.getClassName() != null )
         {
             return false;
         }
-        if ( defaultValue != null ? !defaultValue.equals( that.defaultValue ) : that.defaultValue != null )
+
+        if ( !Objects.equals( typeParameters, that.typeParameters ) )
         {
             return false;
         }
-        if ( property != null ? !property.equals( that.property ) : that.property != null )
+        if ( !Objects.equals( alias, that.alias ) )
+        {
+            return false;
+        }
+        if ( !Objects.equals( defaultValue, that.defaultValue ) )
+        {
+            return false;
+        }
+        if ( !Objects.equals( property, that.property ) )
         {
             return false;
         }
@@ -201,12 +247,7 @@ public class ParameterAnnotationContent
     @Override
     public int hashCode()
     {
-        int result = alias != null ? alias.hashCode() : 0;
-        result = 31 * result + ( getFieldName() != null ? getFieldName().hashCode() : 0 );
-        result = 31 * result + ( property != null ? property.hashCode() : 0 );
-        result = 31 * result + ( defaultValue != null ? defaultValue.hashCode() : 0 );
-        result = 31 * result + ( required ? 1 : 0 );
-        result = 31 * result + ( readonly ? 1 : 0 );
-        return result;
+        return Objects.hash( alias, getFieldName(), getClassName(), typeParameters, property, defaultValue, required,
+                             readonly, annotationOnMethod );
     }
 }

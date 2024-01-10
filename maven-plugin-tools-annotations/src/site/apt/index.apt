@@ -52,19 +52,20 @@ import org.apache.maven.settings.Settings;
 
 /**
  * Mojo Description. @Mojo( name = "<goal-name>" ) is the minimal required annotation.
+ *
  * @since <since-text>
  * @deprecated <deprecated-text>
  */
 @Mojo( name = "<goal-name>",
        aggregator = <false|true>, 
        configurator = "<role hint>",
-       executionStrategy = "<once-per-session|always>",
-       inheritByDefault = <true|false>,
+       executionStrategy = "<once-per-session|always>", // (unsupported since Maven 3.0)
+       inheritByDefault = <true|false>, // (unsupported since Maven 3.0)
        instantiationStrategy = InstantiationStrategy.<strategy>,
        defaultPhase = LifecyclePhase.<phase>,
        requiresDependencyResolution = ResolutionScope.<scope>,
        requiresDependencyCollection = ResolutionScope.<scope>, // (since Maven 3.0)
-       requiresDirectInvocation = <false|true>,
+       requiresDirectInvocation = <false|true>, // (unsupported since Maven 3.0)
        requiresOnline = <false|true>,
        requiresProject = <true|false>,
        requiresReports = <false|true>, // (unsupported since Maven 3.0)
@@ -76,6 +77,8 @@ public class MyMojo
     extends AbstractMojo
 {
     /**
+     * Parameter description.
+     *
      * @since <since-text>
      * @deprecated <deprecated-text>
      */
@@ -113,6 +116,15 @@ public class MyMojo
 
     @Parameter( defaultValue = "${project.build.directory}", readonly = true )
     private File target;
+
+    /**
+     * @Parameter for methods can be used only with public setter methods
+    */
+    @Parameter( ... )
+    public setOutput( File output )
+    {
+        ...
+    }
 
     public void execute()
     {

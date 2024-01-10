@@ -71,7 +71,10 @@ public @interface Mojo
     /**
      * execution strategy: <code>once-per-session</code> or <code>always</code>.
      * @return <code>once-per-session</code> or <code>always</code>
+     *
+     * @deprecated unused
      */
+    @Deprecated
     String executionStrategy() default "once-per-session";
 
     /**
@@ -83,7 +86,10 @@ public @interface Mojo
     /**
      * does your mojo requires a reporting context to be executed?
      * @return requires a reporting context
+     *
+     * @deprecated unused
      */
+    @Deprecated
     boolean requiresReports() default false;
 
     /**
@@ -95,7 +101,10 @@ public @interface Mojo
     /**
      * can this Mojo be invoked directly only?
      * @return invoked directly only
+     *
+     * @deprecated unused
      */
+    @Deprecated
     boolean requiresDirectInvocation() default false;
 
     /**
@@ -104,6 +113,10 @@ public @interface Mojo
      */
     boolean requiresOnline() default false;
 
+    /**
+     * @deprecated unused
+     */
+    @Deprecated
     boolean inheritByDefault() default true;
 
     /**

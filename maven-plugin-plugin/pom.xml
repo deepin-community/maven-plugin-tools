@@ -23,7 +23,7 @@
   <parent>
     <artifactId>maven-plugin-tools</artifactId>
     <groupId>org.apache.maven.plugin-tools</groupId>
-    <version>3.6.0</version>
+    <version>3.7.1</version>
   </parent>
 
   <groupId>org.apache.maven.plugins</groupId>
@@ -37,16 +37,19 @@
     and a generic help goal.
   </description>
 
+  <prerequisites>
+    <maven>${mavenVersion}</maven>
+  </prerequisites>
+
   <properties>
-    <doxiaVersion>1.4</doxiaVersion>
-    <doxia-sitetoolsVersion>1.4</doxia-sitetoolsVersion>
     <it.debug>true</it.debug>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-compat</artifactId>
+      <artifactId>maven-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
@@ -72,65 +75,62 @@
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
-      <!-- from stricter view, should use ${mavenPluginToolsVersion} but this is causing problems with release plugin -->
-      <!--version>${mavenPluginToolsVersion}</version-->
-      <!--  
+      <!--
         Do not use 'provided' scope here. The annotations are a transitive dependency of
         'maven-plugin-tools-annotations' which fails to load at runtime when not available.
       -->
+    </dependency>
+    <!-- define optional runtime dependencies for integration tests -->
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-tools-ant</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-tools-beanshell</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
     </dependency>
 
     <!-- doxia -->
     <dependency>
       <groupId>org.apache.maven.doxia</groupId>
       <artifactId>doxia-sink-api</artifactId>
-      <version>${doxiaVersion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.doxia</groupId>
       <artifactId>doxia-site-renderer</artifactId>
-      <version>${doxia-sitetoolsVersion}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.codehaus.plexus</groupId>
-          <artifactId>plexus-container-default</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.plexus</groupId>
-          <artifactId>plexus-component-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- Maven -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-repository-metadata</artifactId>
       <version>${mavenVersion}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <!-- shared -->
     <dependency>
       <groupId>org.apache.maven.reporting</groupId>
       <artifactId>maven-reporting-impl</artifactId>
-      <version>2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.reporting</groupId>
-      <artifactId>maven-reporting-api</artifactId>
-      <version>3.0</version>
     </dependency>
 
     <!-- plexus -->
@@ -139,27 +139,32 @@
       <artifactId>plexus-utils</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.sisu</groupId>
+      <artifactId>org.eclipse.sisu.plexus</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.codehaus.plexus</groupId>
       <artifactId>plexus-velocity</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>velocity</groupId>
-          <artifactId>velocity</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
+    <!-- for m2e support: https://www.eclipse.org/m2e/documentation/m2e-making-maven-plugins-compat.html -->
     <dependency>
-      <groupId>org.apache.maven.surefire</groupId>
-      <artifactId>maven-surefire-common</artifactId>
-      <version>2.19.1</version>
+      <groupId>org.sonatype.plexus</groupId>
+      <artifactId>plexus-build-api</artifactId>
+      <version>0.0.7</version>
     </dependency>
 
-
-    <!-- other -->
+    <!-- tests -->
     <dependency>
-      <groupId>org.apache.velocity</groupId>
-      <artifactId>velocity</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <!-- needed for it tests -->
@@ -204,23 +209,6 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.modello</groupId>
-        <artifactId>modello-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>java</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <version>1.0.0</version>
-          <models>
-            <model>src/main/mdo/pluginRequirements.mdo</model>
-          </models>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
@@ -246,21 +234,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.5</version>
-        <!-- will use previous maven-plugin-plugin release to build current maven-plugin-plugin as configured in parent -->
         <executions>
-          <execution>
-            <id>default-descriptor</id>
-            <phase>process-classes</phase>
-          </execution>
           <execution>
             <id>generated-helpmojo</id>
             <goals>
               <goal>helpmojo</goal>
             </goals>
-            <configuration>
-              <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -272,7 +251,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.3</version><!-- cannot use ${mavenPluginToolsVersion} property because release plugin would try to update -->
         <reportSets>
           <reportSet>
             <reports>
@@ -280,11 +258,6 @@
             </reports>
           </reportSet>
         </reportSets>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-invoker-plugin</artifactId>
-        <version>${mavenInvokerPluginVersion}</version>
       </plugin>
     </plugins>
   </reporting>
@@ -297,39 +270,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
-            <version>${mavenInvokerPluginVersion}</version>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>l10n-maven-plugin</artifactId>
-            <version>1.0-alpha-2</version>
-            <configuration>
-              <locales>
-                <locale>de</locale>
-                <locale>fr</locale>
-                <locale>sv</locale>
-              </locales>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-changes-plugin</artifactId>
-            <version>2.5</version>
-            <configuration>
-              <!-- For JIRA-report -->
-              <columnNames>Type,Key,Summary,Assignee,Status,Resolution,Fix Version</columnNames>
-              <maxEntries>200</maxEntries>
-              <onlyCurrentVersion>true</onlyCurrentVersion>
-              <resolutionIds>Closed</resolutionIds>
-              <sortColumnNames>Type,Key</sortColumnNames>
-            </configuration>
-            <reportSets>
-              <reportSet>
-                <reports>
-                  <report>jira-report</report>
-                </reports>
-              </reportSet>
-            </reportSets>
           </plugin>
         </plugins>
       </reporting>
@@ -341,24 +281,28 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
-            <version>${mavenInvokerPluginVersion}</version>
             <configuration>
-              <debug>${it.debug}</debug>
               <projectsDirectory>src/it</projectsDirectory>
               <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
               <preBuildHookScript>setup</preBuildHookScript>
               <postBuildHookScript>verify</postBuildHookScript>
               <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
               <settingsFile>src/it/settings.xml</settingsFile>
+              <debug>true</debug>
+              <streamLogsOnFailures>true</streamLogsOnFailures>
+              <showErrors>true</showErrors>
               <filterProperties>
-                <sitePluginVersion>3.3</sitePluginVersion>
+                <sitePluginVersion>3.12.1</sitePluginVersion>
+                <projectInfoReportsPlugin>3.4.1</projectInfoReportsPlugin>
                 <antVersion>${antVersion}</antVersion>
               </filterProperties>
               <properties>
                 <maven.compiler.source>${maven.compiler.source}</maven.compiler.source>
                 <maven.compiler.target>${maven.compiler.target}</maven.compiler.target>
-                <https.protocols>${https.protocols}</https.protocols>
               </properties>
+              <pomExcludes>
+                <pomExclude>plugin-info-jdk/pom.xml</pomExclude><!-- relies on just a given plugin.xml for generating a report, this is no longer supported -->
+              </pomExcludes>
             </configuration>
             <executions>
               <execution>

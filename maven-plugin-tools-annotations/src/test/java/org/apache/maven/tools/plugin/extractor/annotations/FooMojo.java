@@ -19,8 +19,9 @@ package org.apache.maven.tools.plugin.extractor.annotations;
  * under the License.
  */
 
+import java.util.List;
+
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -28,7 +29,6 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.compiler.manager.CompilerManager;
 
 /**
  * @author Olivier Lamy
@@ -46,17 +46,64 @@ public class FooMojo
     protected String bar;
 
     /**
+     * Setter method for Parameter field
+     */
+    public void setBar( String bar )
+    {
+        this.bar = bar;
+    }
+
+    /**
      * beer for non french folks
      * @deprecated wine is better
      */
+    @Deprecated
     @Parameter( property = "thebeer", defaultValue = "coolbeer" )
     protected String beer;
 
     /**
-     * Plexus compiler manager.
+     * Field for setter method
      */
-    @Component
-    protected CompilerManager compilerManager;
+    private String paramFromSetter;
+
+    /**
+     * setter as parameter.
+     */
+    @Parameter( property = "props.paramFromSetter" )
+    public void setParamFromSetter(String value)
+    {
+        this.paramFromSetter = paramFromSetter;
+    }
+
+    /**
+     * add method as parameter.
+     */
+    @Parameter( property = "props.paramFromAdd" )
+    public void addParamFromAdd(String value)
+    {
+        // empty
+    }
+
+    /**
+     * deprecated setter as parameter.
+     *
+     * @deprecated reason of deprecation
+     */
+    @Deprecated
+    @Parameter( property = "props.paramFromSetterDeprecated" )
+    public void setParamFromSetterDeprecated( List<String> value)
+    {
+        // empty
+    }
+
+    /**
+     * Static methods should be excluded.
+     */
+    @Parameter
+    public static void setStaticMethod( String value )
+    {
+        // empty
+    }
 
     /**
      *
@@ -64,9 +111,16 @@ public class FooMojo
     @Component( role = ArtifactMetadataSource.class, hint = "maven" )
     protected ArtifactMetadataSource artifactMetadataSource;
 
+    @Override
     public void execute()
         throws MojoExecutionException, MojoFailureException
     {
         // nothing
+    }
+
+    @Deprecated
+    public void deprecatedMethod(String value)
+    {
+
     }
 }

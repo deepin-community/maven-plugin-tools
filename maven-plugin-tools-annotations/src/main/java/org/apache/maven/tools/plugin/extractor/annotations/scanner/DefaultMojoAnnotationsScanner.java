@@ -19,6 +19,9 @@ package org.apache.maven.tools.plugin.extractor.annotations.scanner;
  * under the License.
  */
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
@@ -32,6 +35,7 @@ import org.apache.maven.tools.plugin.extractor.annotations.datamodel.ParameterAn
 import org.apache.maven.tools.plugin.extractor.annotations.scanner.visitors.MojoAnnotationVisitor;
 import org.apache.maven.tools.plugin.extractor.annotations.scanner.visitors.MojoClassVisitor;
 import org.apache.maven.tools.plugin.extractor.annotations.scanner.visitors.MojoFieldVisitor;
+import org.apache.maven.tools.plugin.extractor.annotations.scanner.visitors.MojoParameterVisitor;
 import org.codehaus.plexus.logging.AbstractLogEnabled;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.StringUtils;
@@ -53,19 +57,24 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
+ * Mojo scanner with java annotations.
+ *
  * @author Olivier Lamy
  * @since 3.0
  */
-@org.codehaus.plexus.component.annotations.Component( role = MojoAnnotationsScanner.class )
+@Named
+@Singleton
 public class DefaultMojoAnnotationsScanner
     extends AbstractLogEnabled
     implements MojoAnnotationsScanner
 {
     // classes with a dash must be ignored
     private static final Pattern SCANNABLE_CLASS = Pattern.compile( "[^-]+\\.class" );
-    
+    private static final String EMPTY = "";
+
     private Reflector reflector = new Reflector();
 
+    @Override
     public Map<String, MojoAnnotatedClass> scan( MojoAnnotationsScannerRequest request )
         throws ExtractionException
     {
@@ -200,7 +209,7 @@ public class DefaultMojoAnnotationsScanner
                                      Artifact artifact, boolean excludeMojo, String source, String file )
         throws IOException, ExtractionException
     {
-        MojoClassVisitor mojoClassVisitor = new MojoClassVisitor( getLogger() );
+        MojoClassVisitor mojoClassVisitor = new MojoClassVisitor( );
 
         try
         {
@@ -270,6 +279,12 @@ public class DefaultMojoAnnotationsScanner
             {
                 MojoAnnotationContent mojoAnnotationContent = new MojoAnnotationContent();
                 populateAnnotationContent( mojoAnnotationContent, mojoAnnotationVisitor );
+
+                if ( mojoClassVisitor.getAnnotationVisitor( Deprecated.class ) != null )
+                {
+                    mojoAnnotationContent.setDeprecated( EMPTY );
+                }
+
                 mojoAnnotatedClass.setMojo( mojoAnnotationContent );
             }
 
@@ -283,15 +298,22 @@ public class DefaultMojoAnnotationsScanner
             }
 
             // @Parameter annotations
-            List<MojoFieldVisitor> mojoFieldVisitors = mojoClassVisitor.findFieldWithAnnotation( Parameter.class );
-            for ( MojoFieldVisitor mojoFieldVisitor : mojoFieldVisitors )
+            List<MojoParameterVisitor> mojoParameterVisitors = mojoClassVisitor.findParameterVisitors();
+            for ( MojoParameterVisitor parameterVisitor : mojoParameterVisitors )
             {
                 ParameterAnnotationContent parameterAnnotationContent =
-                    new ParameterAnnotationContent( mojoFieldVisitor.getFieldName(), mojoFieldVisitor.getClassName() );
-                if ( mojoFieldVisitor.getMojoAnnotationVisitor() != null )
+                    new ParameterAnnotationContent( parameterVisitor.getFieldName(), parameterVisitor.getClassName(),
+                                                    parameterVisitor.getTypeParameters(),
+                                                    parameterVisitor.isAnnotationOnMethod() );
+
+                Map<String, MojoAnnotationVisitor> annotationVisitorMap = parameterVisitor.getAnnotationVisitorMap();
+                MojoAnnotationVisitor fieldAnnotationVisitor = annotationVisitorMap.get( Parameter.class.getName() );
+
+                populateAnnotationContent( parameterAnnotationContent, fieldAnnotationVisitor );
+
+                if ( annotationVisitorMap.containsKey( Deprecated.class.getName() ) )
                 {
-                    populateAnnotationContent( parameterAnnotationContent,
-                                               mojoFieldVisitor.getMojoAnnotationVisitor() );
+                    parameterAnnotationContent.setDeprecated( EMPTY );
                 }
 
                 mojoAnnotatedClass.getParameters().put( parameterAnnotationContent.getFieldName(),
@@ -299,19 +321,21 @@ public class DefaultMojoAnnotationsScanner
             }
 
             // @Component annotations
-            mojoFieldVisitors = mojoClassVisitor.findFieldWithAnnotation( Component.class );
+            List<MojoFieldVisitor> mojoFieldVisitors = mojoClassVisitor.findFieldWithAnnotation( Component.class );
             for ( MojoFieldVisitor mojoFieldVisitor : mojoFieldVisitors )
             {
                 ComponentAnnotationContent componentAnnotationContent =
                     new ComponentAnnotationContent( mojoFieldVisitor.getFieldName() );
 
-                MojoAnnotationVisitor annotationVisitor = mojoFieldVisitor.getMojoAnnotationVisitor();
+                Map<String, MojoAnnotationVisitor> annotationVisitorMap = mojoFieldVisitor.getAnnotationVisitorMap();
+                MojoAnnotationVisitor annotationVisitor = annotationVisitorMap.get( Component.class.getName() );
+
                 if ( annotationVisitor != null )
                 {
                     for ( Map.Entry<String, Object> entry : annotationVisitor.getAnnotationValues().entrySet() )
                     {
                         String methodName = entry.getKey();
-                        if ( StringUtils.equals( "role", methodName ) )
+                        if ( "role".equals( methodName ) )
                         {
                             Type type = (Type) entry.getValue();
                             componentAnnotationContent.setRoleClassName( type.getClassName() );

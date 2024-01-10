@@ -22,28 +22,36 @@ package org.apache.maven.tools.plugin.extractor.model;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Set;
-import junit.framework.TestCase;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+// at least one test class must be public for test-javadoc report
 public class PluginMetadataParserTest
-    extends TestCase
 {
     
-    public void testBasicDeclarationWithoutCall()
+    @Test
+    void testBasicDeclarationWithoutCall()
         throws PluginMetadataParseException
     {
         File metadataFile = getMetadataFile( "test.mojos.xml" );
         Set<MojoDescriptor> descriptors = new PluginMetadataParser().parseMojoDescriptors( metadataFile );
         
-        assertEquals( 1, descriptors.size() );
+        assertEquals(1, descriptors.size());
         
         MojoDescriptor desc = descriptors.iterator().next();
-        assertTrue( desc.getImplementation().indexOf( ":" ) < 0 );
+        assertFalse( desc.getImplementation().contains( ":" ) );
         assertEquals( "test", desc.getGoal() );
     }
     
-    public void testBasicDeclarationWithCall()
+    @Test
+    void testBasicDeclarationWithCall()
         throws PluginMetadataParseException
     {
         File metadataFile = getMetadataFile( "test2.mojos.xml" );
@@ -61,18 +69,12 @@ public class PluginMetadataParserTest
         try
         {
             URL resource = Thread.currentThread().getContextClassLoader().getResource( name );
-            if ( resource == null )
-            {
-                fail( "Cannot find classpath resource: '" + name + "'." );
-            }
-
-            // TODO As of JDK 7, replace with Paths.get( resource.toURI() ).toFile()
-            return new File( resource.toURI() );
+            assertNotNull( resource, "Cannot find classpath resource: '" + name + "'." );
+            return Paths.get( resource.toURI() ).toFile();
         }
         catch ( final URISyntaxException e )
         {
             throw new AssertionError( e );
         }
     }
-
 }

@@ -20,18 +20,14 @@
 File descriptorFile = new File( basedir, "target/classes/META-INF/maven/plugin.xml" );
 assert descriptorFile.isFile()
 
-File oldHelpClass = new File( basedir, "target/classes/HelpMojo.class" );
-assert !oldHelpClass.exists()
-
-File newHelpClass = new File( basedir, "target/classes/org/apache/maven/plugin/coreit/HelpMojo.class" );
-assert newHelpClass.exists()
+File helpClass = new File( basedir, "target/classes/org/apache/maven/its/annotation_with_inheritance_from_deps/annotation_with_inheritance_from_deps/HelpMojo.class" );
+assert helpClass.exists()
 
 def pluginDescriptor = new XmlParser().parse( descriptorFile );
 
 def mojo = pluginDescriptor.mojos.mojo.findAll{ it.goal.text() == "first"}[0]
 
 assert mojo.goal.text() == 'first'
-assert mojo.implementation.text() == 'org.apache.maven.plugin.coreit.FirstMojo'
 assert mojo.language.text() == 'java'
 assert mojo.description.text() == 'Touches a test file.'
 assert mojo.deprecated.text() == "Don't use!"
@@ -47,24 +43,22 @@ assert mojo.executePhase.text() == 'package'
 assert mojo.executeLifecycle.text() == 'my-lifecycle'
 
 assert mojo.configuration.bar[0].text() == '${thebar}'
-assert mojo.configuration.bar[0].'@implementation' == 'java.lang.String'
 assert mojo.configuration.bar[0].'@default-value' == 'coolbar'
 
 assert mojo.configuration.beer[0].text() == '${thebeer}'
-assert mojo.configuration.beer[0].'@implementation' == 'java.lang.String'
 assert mojo.configuration.beer[0].'@default-value' == 'coolbeer'
 
-assert mojo.requirements.requirement.size() == 3
+assert mojo.requirements.requirement.size() == 2
 
-assert mojo.requirements.requirement[1].role.text() == 'org.codehaus.plexus.compiler.manager.CompilerManager'
+assert mojo.requirements.requirement[0].role.text() == 'org.apache.maven.artifact.metadata.ArtifactMetadataSource'
+assert mojo.requirements.requirement[0].'role-hint'.text() == 'maven'
+assert mojo.requirements.requirement[0].'field-name'.text() == 'artifactMetadataSource'
+
+assert mojo.requirements.requirement[1].role.text() == 'org.apache.maven.project.MavenProjectHelper'
 assert mojo.requirements.requirement[1].'role-hint'.text() == ''
-assert mojo.requirements.requirement[1].'field-name'.text() == 'compilerManager'
+assert mojo.requirements.requirement[1].'field-name'.text() == 'projectHelper'
 
-assert mojo.requirements.requirement[2].role.text() == 'org.apache.maven.project.MavenProjectHelper'
-//assert mojo.requirements.requirement[2].'role-hint'.text() == 'default'
-assert mojo.requirements.requirement[2].'field-name'.text() == 'projectHelper'
-
-assert mojo.parameters.parameter.size() == 3
+assert mojo.parameters.parameter.size() == 6
 
 def parameter = mojo.parameters.parameter.findAll{ it.name.text() == "aliasedParam"}[0]
 
@@ -95,5 +89,35 @@ assert parameter.deprecated.isEmpty()
 assert parameter.required.text() == 'true'
 assert parameter.editable.text() == 'true'
 assert parameter.description.text() == 'the cool bar to go'
+
+parameter = mojo.parameters.parameter.findAll{ it.name.text() == "paramFromSetter"}[0]
+
+assert parameter.name.text() == 'paramFromSetter'
+assert parameter.alias.isEmpty()
+assert parameter.type.text() == 'java.lang.String'
+assert parameter.deprecated.isEmpty()
+assert parameter.required.text() == 'false'
+assert parameter.editable.text() == 'true'
+assert parameter.description.text() == 'setter as parameter.'
+
+parameter = mojo.parameters.parameter.findAll{ it.name.text() == "paramFromAdd"}[0]
+
+assert parameter.name.text() == 'paramFromAdd'
+assert parameter.alias.isEmpty()
+assert parameter.type.text() == 'java.lang.String'
+assert parameter.deprecated.isEmpty()
+assert parameter.required.text() == 'false'
+assert parameter.editable.text() == 'true'
+assert parameter.description.text() == 'add method as parameter.'
+
+parameter = mojo.parameters.parameter.findAll{ it.name.text() == "paramFromSetterDeprecated"}[0]
+
+assert parameter.name.text() == 'paramFromSetterDeprecated'
+assert parameter.alias.isEmpty()
+assert parameter.type.text() == 'java.util.List'
+assert parameter.deprecated.text() == 'reason of deprecation'
+assert parameter.required.text() == 'false'
+assert parameter.editable.text() == 'true'
+assert parameter.description.text() == 'deprecated setter as parameter.'
 
 return true;
