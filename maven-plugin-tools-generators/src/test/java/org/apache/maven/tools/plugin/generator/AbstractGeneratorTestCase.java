@@ -20,6 +20,7 @@ package org.apache.maven.tools.plugin.generator;
  */
 
 import org.apache.maven.model.Build;
+import org.apache.maven.plugin.descriptor.DuplicateParameterException;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.plugin.descriptor.Parameter;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
@@ -27,9 +28,9 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.tools.plugin.DefaultPluginToolsRequest;
-import org.codehaus.plexus.PlexusTestCase;
 import org.codehaus.plexus.component.repository.ComponentDependency;
 import org.codehaus.plexus.util.FileUtils;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -42,19 +43,12 @@ import java.util.List;
  * @author <a href="mailto:jason@maven.org">Jason van Zyl </a>
  */
 public abstract class AbstractGeneratorTestCase
-    extends PlexusTestCase
 {
     protected Generator generator;
 
-    protected String basedir;
+    protected String basedir = System.getProperty( "basedir" );
 
-    protected void setUp()
-        throws Exception
-    {
-        super.setUp();
-        basedir = System.getProperty( "basedir" );
-    }
-
+    @Test
     public void testGenerator()
         throws Exception
     {
@@ -64,8 +58,9 @@ public abstract class AbstractGeneratorTestCase
         mojoDescriptor.setGoal( "testGoal" );
         mojoDescriptor.setImplementation( "org.apache.maven.tools.plugin.generator.TestMojo" );
         mojoDescriptor.setDependencyResolutionRequired( "compile" );
+        mojoDescriptor.setSince( "mojoSince" );
 
-        List<Parameter> params = new ArrayList<Parameter>();
+        List<Parameter> params = new ArrayList<>();
 
         Parameter param = new Parameter();
         param.setExpression( "${project.build.directory}" );
@@ -75,7 +70,12 @@ public abstract class AbstractGeneratorTestCase
         param.setType( "java.lang.String" );
         param.setDescription( "Test parameter description" );
         param.setAlias( "some.alias" );
+        param.setSince( "paramDirSince" );
+        params.add( param );
 
+        param = new Parameter();
+        param.setName( "withoutSince" );
+        param.setType( "java.lang.String" );
         params.add( param );
 
         mojoDescriptor.setParameters( params );
@@ -115,12 +115,17 @@ public abstract class AbstractGeneratorTestCase
                 return basedir + "/target";
             }
         } );
-
+        extendPluginDescriptor( pluginDescriptor );
         generator.execute( destinationDirectory, new DefaultPluginToolsRequest( mavenProject, pluginDescriptor ) );
 
         validate( destinationDirectory );
 
         FileUtils.deleteDirectory( destinationDirectory );
+    }
+
+    protected void extendPluginDescriptor( PluginDescriptor pluginDescriptor ) throws DuplicateParameterException
+    {
+        // may be overwritten
     }
 
     // ----------------------------------------------------------------------

@@ -42,12 +42,14 @@ under the License.
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>2.2.1</version>
+      <version>@mavenVersion@</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>2.2.1</version>
+      <version>@mavenVersion@</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 

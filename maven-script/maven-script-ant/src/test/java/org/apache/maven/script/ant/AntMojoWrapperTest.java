@@ -19,6 +19,16 @@ package org.apache.maven.script.ant;
  * under the License.
  */
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.startsWith;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -27,12 +37,13 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Build;
@@ -55,76 +66,53 @@ import org.codehaus.plexus.component.repository.ComponentRequirement;
 import org.codehaus.plexus.configuration.PlexusConfigurationException;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
-import org.codehaus.plexus.util.IOUtil;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
+// at least one test class must be public for test-javadoc report
 public class AntMojoWrapperTest
-    extends TestCase
 {
+    
+    private BuildListener buildListener;
 
-    public void test2xStylePlugin()
+    @BeforeEach
+    public void setUp() 
+    {
+        buildListener = mock( BuildListener.class );
+    }
+    
+    @Test
+    void test2xStylePlugin()
         throws PlexusConfigurationException, IOException, ComponentInstantiationException, MojoExecutionException,
         ComponentConfigurationException, ArchiverException, URISyntaxException
     {
         String pluginXml = "META-INF/maven/plugin-2.1.xml";
 
-        List<String> messages = run( pluginXml, true );
+        List<String> messages = run( pluginXml );
 
-        assertPresence( messages, "Unpacked Ant build scripts (in Maven build directory).", false );
-        assertPresence( messages, "Maven parameter expression evaluator for Ant properties.", false );
-        assertPresence( messages, "Maven standard project-based classpath references.", false );
-        assertPresence( messages, "Maven standard plugin-based classpath references.", false );
-        assertPresence( messages,
-                        "Maven project, session, mojo-execution, or path-translation parameter information is", false );
-        assertPresence( messages, "maven-script-ant < 2.1.0, or used maven-plugin-tools-ant < 2.2 during release",
-                        false );
+        assertPresence( messages, "Unpacked Ant build scripts (in Maven build directory)." );
+        assertPresence( messages, "Maven parameter expression evaluator for Ant properties." );
+        assertPresence( messages, "Maven standard project-based classpath references." );
+        assertPresence( messages, "Maven standard plugin-based classpath references." );
+        assertPresence( messages, "Maven project, session, mojo-execution, or path-translation parameter information is" );
+        assertPresence( messages, "maven-script-ant < 2.1.0, or used maven-plugin-tools-ant < 2.2 during release" );
 
-        assertPresence( messages, "path-is-missing", false );
+        ArgumentCaptor<BuildEvent> buildEvent = ArgumentCaptor.forClass(BuildEvent.class);
+        verify( buildListener, atLeastOnce() ).messageLogged( buildEvent.capture() );
+
+        // last message
+        assertThat( buildEvent.getValue().getMessage(), startsWith( "plugin classpath is: " ) );
+        assertThat( buildEvent.getValue().getMessage(), endsWith( ".test.jar" ) );
     }
 
-    public void test20StylePlugin()
-        throws PlexusConfigurationException, IOException, ComponentInstantiationException, MojoExecutionException,
-        ComponentConfigurationException, ArchiverException, URISyntaxException
+    private void assertPresence( List<String> messages, String test )
     {
-        String pluginXml = "META-INF/maven/plugin-2.0.xml";
-
-        List<String> messages = run( pluginXml, false );
-
-        assertPresence( messages, "Unpacked Ant build scripts (in Maven build directory).", true );
-        assertPresence( messages, "Maven parameter expression evaluator for Ant properties.", true );
-        assertPresence( messages, "Maven standard project-based classpath references.", true );
-        assertPresence( messages, "Maven standard plugin-based classpath references.", true );
-        assertPresence( messages,
-                        "Maven project, session, mojo-execution, or path-translation parameter information is", true );
-        assertPresence( messages, "maven-script-ant < 2.1.0, or used maven-plugin-tools-ant < 2.2 during release", true );
-
-        assertPresence( messages, "path-is-missing", true );
+        assertTrue( messages.stream().noneMatch( s -> s.contains( test ) ),
+                "Test string: '" + test + "' was found in output, but SHOULD NOT BE THERE." );
     }
 
-    private void assertPresence( List<String> messages, String test, boolean shouldBePresent )
-    {
-        for ( String message : messages )
-        {
-            if ( message.contains( test ) )
-            {
-                if ( !shouldBePresent )
-                {
-                    fail( "Test string: '" + test + "' was found in output, but SHOULD NOT BE THERE." );
-                }
-                return;
-            }
-        }
-
-        if ( shouldBePresent )
-        {
-            fail( "Test string: '" + test + "' was NOT found in output, but SHOULD BE THERE." );
-        }
-    }
-
-    private List<String> run( String pluginXml, boolean includeImplied )
+    private List<String> run( String pluginXml )
         throws PlexusConfigurationException, IOException, ComponentInstantiationException, MojoExecutionException,
         ComponentConfigurationException, ArchiverException, URISyntaxException
     {
@@ -133,26 +121,15 @@ public class AntMojoWrapperTest
 
         URL resource = Thread.currentThread().getContextClassLoader().getResource( pluginXml );
 
-        if ( resource == null )
-        {
-            fail( "plugin descriptor not found: '" + pluginXml + "'." );
-        }
+        assertNotNull( resource, "plugin descriptor not found: '" + pluginXml + "'." );
 
-        Reader reader = null;
         PluginDescriptor pd;
-        try
+        try ( Reader reader = new InputStreamReader( resource.openStream() ) )
         {
-            reader = new InputStreamReader( resource.openStream() );
             pd = new PluginDescriptorBuilder().build( reader, pluginXml );
-            reader.close();
-            reader = null;
-        }
-        finally
-        {
-            IOUtil.close( reader );
         }
 
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, Object> config = new HashMap<>();
         config.put( "basedir", new File( "." ).getAbsoluteFile() );
         config.put( "messageLevel", "info" );
 
@@ -163,59 +140,48 @@ public class AntMojoWrapperTest
 
         wrapper.enableLogging( new ConsoleLogger( Logger.LEVEL_DEBUG, "test" ) );
 
-        Artifact artifact = createMock( Artifact.class );
-        PathTranslator pt = createMock( PathTranslator.class );
+        Artifact artifact = mock( Artifact.class );
+        PathTranslator pt = mock( PathTranslator.class );
 
-        if ( includeImplied )
-        {
-            // TODO As of JDK 7, replace with Paths.get( resource.toURI() ).toFile()
-            File pluginXmlFile = new File( resource.toURI() );
+        File pluginXmlFile = Paths.get( resource.toURI() ).toFile();
 
-            File jarFile = File.createTempFile( "AntMojoWrapperTest.", ".test.jar" );
-            jarFile.deleteOnExit();
+        File jarFile = File.createTempFile( "AntMojoWrapperTest.", ".test.jar" );
+        jarFile.deleteOnExit();
 
-            JarArchiver archiver = new JarArchiver();
-            archiver.enableLogging( new ConsoleLogger( Logger.LEVEL_ERROR, "archiver" ) );
-            archiver.setDestFile( jarFile );
-            archiver.addFile( pluginXmlFile, pluginXml );
-            archiver.createArchive();
+        JarArchiver archiver = new JarArchiver();
+        archiver.setDestFile( jarFile );
+        archiver.addFile( pluginXmlFile, pluginXml );
+        archiver.createArchive();
 
-            expect( artifact.getFile() ).andReturn( jarFile ).anyTimes();
-            expect( artifact.getGroupId() ).andReturn( "groupId" ).anyTimes();
-            expect( artifact.getArtifactId() ).andReturn( "artifactId" ).anyTimes();
-            expect( artifact.getVersion() ).andReturn( "1" ).anyTimes();
-            expect( artifact.getId() ).andReturn( "groupId:artifactId:jar:1" ).anyTimes();
-            expect( artifact.getClassifier() ).andReturn( null ).anyTimes();
+        when( artifact.getFile() ).thenReturn( jarFile );
 
-            Model model = new Model();
+        Model model = new Model();
 
-            Build build = new Build();
-            build.setDirectory( "target" );
+        Build build = new Build();
+        build.setDirectory( "target" );
 
-            model.setBuild( build );
+        model.setBuild( build );
 
-            MavenProject project = new MavenProject( model );
-            project.setFile( new File( "pom.xml" ).getAbsoluteFile() );
+        MavenProject project = new MavenProject( model );
+        project.setFile( new File( "pom.xml" ).getAbsoluteFile() );
 
-            replay( artifact, pt );
+        pd.setPluginArtifact( artifact );
+        pd.setArtifacts( Collections.singletonList( artifact ) );
 
-            pd.setPluginArtifact( artifact );
-            pd.setArtifacts( Collections.singletonList( artifact ) );
+        config.put( "project", project );
+        config.put( "session", new MavenSession( null, null, null, null, null, null, null, null, null, null ) );
+        config.put( "mojoExecution", new MojoExecution( md ) );
 
-            config.put( "project", project );
-            config.put( "session", new MavenSession( null, null, null, null, null, null, null, null, null, null ) );
-            config.put( "mojoExecution", new MojoExecution( md ) );
+        ComponentRequirement cr = new ComponentRequirement();
+        cr.setRole( PathTranslator.class.getName() );
 
-            ComponentRequirement cr = new ComponentRequirement();
-            cr.setRole( PathTranslator.class.getName() );
-
-            wrapper.addComponentRequirement( cr, pt );
-        }
+        wrapper.addComponentRequirement( cr, pt );
 
         wrapper.setComponentConfiguration( config );
 
         TestBuildListener tbl = new TestBuildListener();
-        wrapper.getAntProject().addBuildListener( tbl );
+        
+        wrapper.getAntProject().addBuildListener( buildListener );
         
         PrintStream oldOut = System.out;
         
@@ -233,18 +199,13 @@ public class AntMojoWrapperTest
 
         System.out.println( "\n\n" + stack.getMethodName() + " executed; verifying...\n\n" );
 
-        if ( includeImplied )
-        {
-            verify( artifact, pt );
-        }
-
-        List<String> messages = new ArrayList<String>();
+        List<String> messages = new ArrayList<>();
         if ( !tbl.messages.isEmpty() )
         {
             messages.addAll( tbl.messages );
         }
         
-        messages.add( new String( baos.toByteArray() ) );
+        messages.add( baos.toString() );
         
         return messages;
     }
@@ -252,7 +213,7 @@ public class AntMojoWrapperTest
     private static final class TestBuildListener
         implements BuildListener
     {
-        private List<String> messages = new ArrayList<String>();
+        private final List<String> messages = new ArrayList<>();
 
         public void buildFinished( BuildEvent arg0 )
         {
@@ -282,6 +243,5 @@ public class AntMojoWrapperTest
         public void taskStarted( BuildEvent arg0 )
         {
         }
-    };
-
+    }
 }
